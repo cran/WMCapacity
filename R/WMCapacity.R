@@ -223,11 +223,12 @@ int.matrix<-function(m){
 }
 
 
-niceParVec=function(par,newDat2Cat,newDat2Cont,namedDat2,effects,incCont,useA){
+niceParVec=function(par,newDat2Cat,newDat2Cont,namedDat2,effects,incCont,useA,sd=NA){
   
-  newPars=data.frame(array(par,dim=c(length(par),5)))
-  colnames(newPars)=c("Parameter","Effect","Level","Type","Estimate")
+  newPars=data.frame(array(par,dim=c(length(par),6)))
+  colnames(newPars)=c("Parameter","Effect","Level","Type","Estimate","Post. SD")
   newPars[,5]=par
+  newPars[,6]=sd
   newPars[1,1:4]=c("k","grand mean","-","-")
   intcolnames1=colnames(newDat2Cat)[-(1:5)]
   intcolnames2=colnames(newDat2Cont)[-(1:5)]
@@ -305,7 +306,7 @@ createDat <- function(data,respColumn,changeColumn,setSizeColumn,interestColumns
 
 	for(i in 1:length(interestColumns[,1])){
 		if(interestColumns[i,2]=="CATEG"){
-			#newData[,i+5] = as.integer(newData[,i+5])			
+			newData[,i+5] = as.factor(as.character(newData[,i+5]))			
 		}else if(interestColumns[i,2]=="CONTIN"){
 			newData[,i+5] = as.numeric(as.character(newData[,i+5]))
 		}
@@ -447,6 +448,8 @@ return(newDat2)
 }
 
 
+
+
 createMeaningfulCols <- function(newDat,allMods,intMods,SelCols)#,LevelNames)
 {
 
@@ -478,14 +481,14 @@ createMeaningfulCols <- function(newDat,allMods,intMods,SelCols)#,LevelNames)
       		cc=CatOrCont(colnames(newDat)[myCols+5],SelCols)
       		if(length(myCols)>1){
 				if(any(cc=="CATEG")){
-					newDat2=data.frame(newDat2,apply(cbind(namedCols[,myCols[cc=="CATEG"]]),1,paste,collapse=".x."))
+					newDat2=data.frame(newDat2,apply(cbind(apply(namedCols[,myCols[cc=="CATEG"]],c(1,2),as.character)),1,paste,collapse=".x."))
 				}else{
 					newDat2=data.frame(newDat2,rep("(CATEGORICAL)",length(newDat2[,1])))	      			
 				}
 				names=c(names,paste(colnames(newDat)[myCols+5],collapse=".x."))      			
 			}else{
 				if(any(cc=="CATEG")){
-					newDat2=data.frame(newDat2,namedCols[,myCols])
+					newDat2=data.frame(newDat2,as.character(namedCols[,myCols]))
       			}else{
 					newDat2=data.frame(newDat2,rep("(CATEGORICAL)",length(newDat2[,1])))
       			}
