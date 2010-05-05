@@ -1,3 +1,22 @@
+.womSetupDiagnosticsComboBox<-function()
+{
+	itersSpace = theWidget('diagnosticItersComboSpace')
+	typeSpace = theWidget('diagnosticTypeComboSpace')
+	StateEnv$itersCombo = gtkComboBoxNewText()
+	StateEnv$typeCombo = gtkComboBoxNewText()
+	gtkComboBoxAppendText(StateEnv$itersCombo, "All")
+	gtkComboBoxAppendText(StateEnv$typeCombo, "effects")
+	itersSpace$packStart(StateEnv$itersCombo,FALSE,FALSE,0)
+	typeSpace$packStart(StateEnv$typeCombo,FALSE,FALSE,0)
+	gtkComboBoxSetActive(StateEnv$itersCombo,0)
+	gtkComboBoxSetActive(StateEnv$typeCombo,0)
+	#Connect chain limit signal
+	StateEnv$handlers$diagnosticLimitCombo <- gSignalConnect(StateEnv$itersCombo, "changed", .selected_number_chain_iterations)
+	# Connect parameter type signal
+	StateEnv$handlers$diagnosticTypeCombo <- gSignalConnect(StateEnv$typeCombo, "changed", .selected_diagnostic_parameter_type)
+}
+
+
 .womActiveDiagnosticsTab<-function(status=TRUE)
 {
 
@@ -177,6 +196,7 @@
 
 .selected_diagnostics_model_row <- function(treeview, path, view_column)
 {
+	
 	treeview <- theWidget("diagnosticDefinedModelsTreeview")
 	model = gtkTreeViewGetModel(treeview)	
 	
@@ -186,28 +206,32 @@
 	
 	myModel = wommbatAnalysis$Models[[modelName]]
 
+	limitCombo = StateEnv$itersCombo
+	typeCombo = StateEnv$typeCombo
+
+	
 	if(is.null(myModel$results))
 	{
 		.womClearDiagnosticPlots()
-		theWidget("diagnosticCombobox1")$setSensitive(FALSE)
-		theWidget("diagnosticTypeComboBox")$setSensitive(FALSE)
+		limitCombo$setSensitive(FALSE)
+		typeCombo$setSensitive(FALSE)
 		theWidget("hscrollbar1")$setSensitive(FALSE)
 		return()
 	}
-	theWidget("diagnosticCombobox1")$setSensitive(TRUE)
-	theWidget("diagnosticTypeComboBox")$setSensitive(TRUE)
+	limitCombo$setSensitive(TRUE)
+	typeCombo$setSensitive(TRUE)
 	theWidget("hscrollbar1")$setSensitive(TRUE)
 
 	
 	# Combo box for iterations limit
-	currentValue = theWidget("diagnosticCombobox1")$getActiveText()
+	currentValue = limitCombo$getActiveText()
 	currentValue = ifelse(is.null(currentValue),"All",currentValue)
 	
-	limitCombo <- theWidget("diagnosticCombobox1")
 	gSignalHandlerBlock(limitCombo, StateEnv$handlers$diagnosticLimitCombo)
 	burnin <- myModel$settings$burninIters
 	upperLimit <- myModel$settings$effectiveIters
 	
+
 	# Make options model
 	limitOptions <-c(upperLimit-burnin,500,1000,5000)
 	limitOptions <- limitOptions[limitOptions <= upperLimit-burnin]
@@ -215,23 +239,26 @@
 	findCurrent = match(currentValue,limitOptions)
 	selectIters = ifelse(is.na(findCurrent),0,findCurrent-1)
 	
-	limitCombo$getModel()$clear()
+	clearComboModel(StateEnv$itersCombo)
+	
 	for (LO in limitOptions) {
-		limitCombo$appendText(LO)
+		gtkComboBoxAppendText(limitCombo,LO)
 	}
 	gtkComboBoxSetActive(limitCombo,selectIters)
-	
+		
 	# Combo box for parameter type
-	currentValueType = theWidget("diagnosticTypeComboBox")$getActiveText()
+	#currentValueType = theWidget("diagnosticTypeComboBox")$getActiveText()
+	currentValueType = typeCombo$getActiveText()
 	currentValueType = ifelse(is.null(currentValueType),"effect",currentValueType)
 	selectType=0
 	
-	typeCombo <- theWidget("diagnosticTypeComboBox")
 	gSignalHandlerBlock(typeCombo, StateEnv$handlers$diagnosticTypeCombo)
-	typeCombo$getModel()$clear()
-	typeCombo$appendText("effect")
+	
+	clearComboModel(StateEnv$typeCombo)
+	gtkComboBoxAppendText(typeCombo,"effect")
+	
 	if(myModel$model$covNgroups>0){
-		typeCombo$appendText("correlation")
+		gtkComboBoxAppendText(typeCombo,"correlation")
 		if(currentValueType=="correlation") selectType=1
 	}
 	gtkComboBoxSetActive(typeCombo,selectType)
@@ -281,7 +308,7 @@
 	n = floor(scrollBar$getValue())
 	if(n==0) n=1
 	
-	parameterType <- theWidget("diagnosticTypeComboBox")
+	parameterType <- StateEnv$typeCombo#theWidget("diagnosticTypeComboBox")
 	typeModel <- parameterType$getModel()
 	
 	typeIdx <- gtkComboBoxGetActiveIter(parameterType)
@@ -337,7 +364,7 @@
 	myModel = wommbatAnalysis$Models[[modelName]]
 	parameterLabel <- theWidget("diagnosticsParameterLabel")
 
-	parameterType <- theWidget("diagnosticTypeComboBox")
+	parameterType <- StateEnv$typeCombo#theWidget("diagnosticTypeComboBox")
 	typeModel <- parameterType$getModel()
 	
 	typeIdx <- gtkComboBoxGetActiveIter(parameterType)
@@ -364,7 +391,7 @@
 	postQuant <- quantile(chain[-(1:burnin)],p=c(.025,.975))
 	
 	#Chain
-	limitCombo <- theWidget("diagnosticCombobox1")
+	limitCombo <- StateEnv$itersCombo#theWidget("diagnosticCombobox1")
 	limitModel <- gtkComboBoxGetModel(limitCombo)
 	upperLimitIdx <- gtkComboBoxGetActiveIter(limitCombo)
 	if(!upperLimitIdx$retval)
@@ -426,7 +453,8 @@
 	modelName = gtkTreeModelGetValue(model,iter,.womDefinedModelsTreeCols("name"))$value
 	myModel = wommbatAnalysis$Models[[modelName]]
 
-	parameterType <- theWidget("diagnosticTypeComboBox")
+	#parameterType <- theWidget("diagnosticTypeComboBox")
+	parameterType <- StateEnv$typeCombo
 	typeModel <- parameterType$getModel()
 	
 	typeIdx <- gtkComboBoxGetActiveIter(parameterType)
@@ -468,7 +496,8 @@
 	
 	burnin <- myModel$settings$burninIters
 	
-	limitCombo <- theWidget("diagnosticCombobox1")
+	#limitCombo <- theWidget("diagnosticCombobox1")
+	limitCombo <- StateEnv$itersCombo
 	limitModel <- gtkComboBoxGetModel(limitCombo)
 	upperLimitIdx <- gtkComboBoxGetActiveIter(limitCombo)
 	if(!upperLimitIdx$retval)

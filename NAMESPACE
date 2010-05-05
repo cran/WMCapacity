@@ -2,6 +2,7 @@ useDynLib(WMCapacity)
 
 import(RGtk2)
 import(grDevices)
+import(XML)
 
 exportPattern("_") # Needed for the Glade interface
 export(wommbatGUI,wommbatNoGUI,womExtractModel,womRlogPosterior,womRgradLogPosterior,

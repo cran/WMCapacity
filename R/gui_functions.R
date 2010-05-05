@@ -33,7 +33,7 @@ womExtractModel <- function(name=1)
 
 
 theWidget <- function(name) {
-	return(StateEnv$GUI$getWidget(name))
+	return(StateEnv$GUI$getObject(name))
 }
 
 freezeGUI <- function(echo.to.log=T) {
@@ -193,3 +193,59 @@ fileChoose <- function(action="cat", text = "Select a file...", type="open", ...
 	browseURL(url="http://wmcapacity.r-forge.r-project.org/")
 }
 
+clearComboModel <- function(combo)
+{
+	gtkComboBoxSetActive(combo,-1)
+	model = gtkComboBoxGetModel(StateEnv$itersCombo)
+	Nelements = gtkTreeModelIterNChildren(model)
+	for(i in 1:Nelements)
+	{
+		gtkComboBoxRemoveText(combo, 0)
+	}
+}
+
+
+# Next four functions taken from rattle
+Rtxt <- function(...)
+{
+  # Currently, on Windows we are waiting for 2.12.17 of  RGtk2 with
+  # rgtk2_bindtextdomain().
+
+#  if (.Platform$OS.type == "windows")
+#    paste(...)
+#  else
+    gettext(paste(...), domain="R-WMCapacity")
+}
+
+# This is used to avoid the string being identified as a translation, as in
+# RtxtNT(paste(vals ...))
+
+RtxtNT <- Rtxt
+
+
+packageIsAvailable <- function(pkg, msg=NULL)
+{
+  if (pkg %notin% rownames(installed.packages()))
+  {
+    if (not.null(msg))
+      if (questionDialog(sprintf(Rtxt("The package '%s' is required to %s.",
+                                      "It does not appear to be installed.",
+                                      "A package can be installed",
+                                      "with the following R command:",
+                                      "\n\ninstall.packages('%s')",
+                                      "\n\nThis will allow access to use",
+                                      "the full functionality of %s.",
+                                      "\n\nWould you like the package to be installed now?"),
+                                 pkg, msg, pkg, crv$appname)))
+      {
+        install.packages(pkg)
+        return(TRUE)
+      }
+    return(FALSE)
+  }
+  else
+    return(TRUE)
+}
+
+
+"%notin%" <- function(x,y) ! x %in% y

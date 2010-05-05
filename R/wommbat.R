@@ -14,17 +14,25 @@ wommbatGUI <- function(project = NULL, projectFile= NULL,CSVfile = NULL, dataFra
 	StateEnv$update <- list()
 	wommbatAnalysis$Models <- list()
 	
-	StateEnv$echo.to.console <- T
-	StateEnv$echo.to.log <- T
+	StateEnv$echo.to.console <- TRUE
+	StateEnv$echo.to.log <- TRUE
 	StateEnv$Graphics <- list()
 	
-	StateEnv$GUI <- gladeXMLNew(getpackagefile("wommbatGlade.glade"),
-		root="window1")
+	#StateEnv$GUI <- gladeXMLNew(getpackagefile("wommbatGlade.glade"),
+	#	root="window1")
+
+	StateEnv$GUI <- gtkBuilder()
+	filename <- getpackagefile("wommbatMain.ui")
+	res <- StateEnv$GUI$addFromFile(filename)
+	if (!is.null(res$error))
+		stop("ERROR: ", res$error$message)
+		
 	StateEnv$win <- theWidget("window1")
 	StateEnv$win$setTitle("WoMMBAT")
 	
 	# connect the callbacks (event handlers)
-	gladeXMLSignalAutoconnect(StateEnv$GUI)
+	#gladeXMLSignalAutoconnect(StateEnv$GUI)
+	StateEnv$GUI$connectSignals(NULL)
 	StateEnv$handlers = list()
 	
 	# Connect scrollbar signal
@@ -34,19 +42,14 @@ wommbatGUI <- function(project = NULL, projectFile= NULL,CSVfile = NULL, dataFra
 	gtkAdjustmentSetValue(scrollBar$getAdjustment(), 1)
 	StateEnv$handlers$diagnosticScrollBar1 <- gSignalConnect(theWidget("hscrollbar1"), "value-changed", .scrolled_diagnostics_scrollbar)
 	
-	#Connect chain limit signal
-	limitCombo <- theWidget("diagnosticCombobox1")
-	StateEnv$handlers$diagnosticLimitCombo <- gSignalConnect(limitCombo, "changed", .selected_number_chain_iterations)
-
-	# Connect parameter type signal
-	typeCombo <- theWidget("diagnosticTypeComboBox")
-	StateEnv$handlers$diagnosticTypeCombo <- gSignalConnect(typeCombo, "changed", .selected_diagnostic_parameter_type)
 	
 	resultsSelection <- theWidget("resultsParEstTreeview")$getSelection()		
 	gtkTreeSelectionSetMode(resultsSelection, "GTK_SELECTION_MULTIPLE")
 	gSignalConnect(resultsSelection, "changed", .resultsSelectionChanged)
 
-	
+	.womSetupDiagnosticsComboBox()	
+	.loadTooltips()
+	.populateTextviews()
 	
 	.womSetInitialSensitivity()
 	
@@ -74,7 +77,7 @@ wommbatGUI <- function(project = NULL, projectFile= NULL,CSVfile = NULL, dataFra
 
 wommbatNoGUI <- function(project=NULL, projectFile= NULL, settings)
 {
-	cat('This function does nothing right now.\n')
+	stop('This function is not yet implemented.')
 	return(invisible(NULL))
 }
 
