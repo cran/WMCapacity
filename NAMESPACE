@@ -3,6 +3,16 @@ useDynLib(WMCapacity)
 import(RGtk2)
 import(grDevices)
 import(XML)
+import(cairoDevice)
+import(coda)
+import(gWidgets)
+import(gWidgetsRGtk2)
+import(gtools)
+
+
+importFrom(stats, lowess, acf, cov2cor, density, optim, quantile, sd)
+importFrom(graphics, plot, par, axis, box, abline, lines, plot.new)
+importFrom(utils, alarm, browseURL, installed.packages, read.csv, write.csv)
 
 exportPattern("_") # Needed for the Glade interface
 export(wommbatGUI,wommbatNoGUI,womExtractModel,womRlogPosterior,womRgradLogPosterior,
